@@ -22,10 +22,10 @@ RUN wget https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VERSION}/phpMyAdmi
 ADD sources/config.inc.php /
 ADD sources/create_user.sql /
 ADD sources/phpmyadmin-start /usr/local/bin/
-ADD sources/phpmyadmin-firstrun /usr/local/bin/
+ADD sources/phpmyadmin-setup /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/phpmyadmin-start
-RUN chmod +x /usr/local/bin/phpmyadmin-firstrun
+RUN chmod +x /usr/local/bin/phpmyadmin-setup
 
 RUN sed -i "s/http {/http {\n        client_max_body_size $MAX_UPLOAD;/" /etc/nginx/nginx.conf
 RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = $MAX_UPLOAD/" /etc/php5/fpm/php.ini
