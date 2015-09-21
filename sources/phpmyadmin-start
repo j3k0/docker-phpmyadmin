@@ -1,8 +1,14 @@
 #!/bin/sh
 
+# wait for db to start accepting connections
+while ! curl -s http://${MYSQL_PORT_3306_TCP_ADDR}:${MYSQL_PORT_3306_TCP_PORT}/ > /dev/null; do
+    echo 'phpMyAdmin waiting for db to accept connections...'
+    sleep 2
+done
+
 if [ -f "/usr/local/bin/phpmyadmin-firstrun" ];
 then
-	/usr/local/bin/phpmyadmin-firstrun
+    /usr/local/bin/phpmyadmin-firstrun
 fi
 
 cp /config.inc.php /www
