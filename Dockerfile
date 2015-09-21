@@ -1,35 +1,31 @@
 FROM corbinu/docker-nginx-php
-MAINTAINER Corbin Uselton corbin@openswimsoftware.com
+MAINTAINER Cody Mize docker@codymize.com
 
-ENV PMA_SECRET          blowfish_secret
-ENV PMA_USERNAME        pma
-ENV PMA_PASSWORD        password
-ENV MYSQL_USERNAME      mysql
-ENV MYSQL_PASSWORD      password
+RUN apt-get update && apt-get install -y mysql-client \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update
-RUN apt-get install -y mysql-client
-
-ENV PHPMYADMIN_VERSION 4.4.15
-ENV MAX_UPLOAD "50M"
+ENV PMA_SECRET=blowfish_secret \
+    PMA_USERNAME=pma \
+    PMA_PASSWORD=password \
+    MYSQL_USERNAME=mysql \
+    MYSQL_PASSWORD=password \
+    PHPMYADMIN_VERSION=4.4.15 \
+    MAX_UPLOAD=50M
 
 RUN wget https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VERSION}/phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 \
- && tar -xvjf /phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 -C / \
- && rm /phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 \
- && rm -r /www \
- && mv /phpMyAdmin-${PHPMYADMIN_VERSION}-english /www
+    && tar -xvjf /phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 -C / \
+    && rm /phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 \
+    && rm -r /www \
+    && mv /phpMyAdmin-${PHPMYADMIN_VERSION}-english /www
 
-ADD sources/config.inc.php /
-ADD sources/create_user.sql /
-ADD sources/phpmyadmin-start /usr/local/bin/
-ADD sources/phpmyadmin-setup /usr/local/bin/
+COPY sources/config.inc.php sources/create_user.sql /
+COPY sources/phpmyadmin-* /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/phpmyadmin-start
-RUN chmod +x /usr/local/bin/phpmyadmin-setup
+RUN chmod +x /usr/local/bin/phpmyadmin-*
 
-RUN sed -i "s/http {/http {\n        client_max_body_size $MAX_UPLOAD;/" /etc/nginx/nginx.conf
-RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = $MAX_UPLOAD/" /etc/php5/fpm/php.ini
-RUN sed -i "s/post_max_size = 8M/post_max_size = $MAX_UPLOAD/" /etc/php5/fpm/php.ini
+RUN sed -i "s/http {/http {\n        client_max_body_size $MAX_UPLOAD;/" /etc/nginx/nginx.conf \
+    && sed -i "s/upload_max_filesize = 2M/upload_max_filesize = $MAX_UPLOAD/" /etc/php5/fpm/php.ini \
+    && sed -i "s/post_max_size = 8M/post_max_size = $MAX_UPLOAD/" /etc/php5/fpm/php.ini
 
 EXPOSE 80
 
