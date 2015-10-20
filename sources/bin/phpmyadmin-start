@@ -7,7 +7,7 @@ while ! curl -s http://${MYSQL_PORT_3306_TCP_ADDR}:${MYSQL_PORT_3306_TCP_PORT}/ 
 done
 
 # setup configs and db for phpMyAdmin
-/usr/local/bin/phpmyadmin-setup
+phpmyadmin-setup
 
 # launch php5-fpm and nginx via supervisor
-/usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+exec supervisord -c /etc/supervisor/supervisord.conf

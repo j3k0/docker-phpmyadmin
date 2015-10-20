@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# set max upload size
-echo "$(envsubst '\$MAX_UPLOAD' < /etc/nginx/nginx.conf)" > /etc/nginx/nginx.conf
-echo "$(envsubst '\$MAX_UPLOAD' < /etc/php5/fpm/php.ini)" > /etc/php5/fpm/php.ini
-
 # if linked to a known mysql container, use root credentials
 # else use user supplied or defaults
 if [ -n ${MYSQL_ENV_MYSQL_ROOT_PASSWORD+x} ]; then
@@ -14,12 +10,8 @@ fi
 mysql_client="mysql --host=$MYSQL_PORT_3306_TCP_ADDR --port=$MYSQL_PORT_3306_TCP_PORT --user=$MYSQL_USERNAME --password=$MYSQL_PASSWORD"
 
 # create pma tables if they do not exist
-$mysql_client < /www/sql/create_tables.sql
+$mysql_client < sql/create_tables.sql
 
 # grant $PMA_USERNAME all privileges on phpmyadmin.*
 # implicitly creates $PMA_USERNAME if it does not exist
-$mysql_client <<< $(envsubst '$PMA_USERNAME,$PMA_PASSWORD' < /templates/create_user.sql)
-
-# setup pma config
-envsubst '$PMA_SECRET,$PMA_USERNAME,$PMA_PASSWORD,$PMA_URI,$MYSQL_PORT_3306_TCP_ADDR,$MYSQL_PORT_3306_TCP_PORT' \
-  < /templates/config.inc.php > /www/config.inc.php
+$mysql_client  < sql/create_user.sql

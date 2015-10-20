@@ -1,46 +1,46 @@
-FROM corbinu/docker-nginx-php
-MAINTAINER Cody Mize docker@codymize.com
+FROM kingcody/php:nginx
+MAINTAINER Cody Mize <docker@codymize.com>
 
 # Set default env
-ENV MAX_UPLOAD=50M \
-    PMA_SECRET=blowfish_secret \
+ENV PMA_SECRET=blowfish_secret \
     PMA_USERNAME=pma \
     PMA_PASSWORD=password \
     MYSQL_USERNAME=mysql \
     MYSQL_PASSWORD=password
 
-# Create $MAX_UPLOAD templates
-RUN sed -e 's/http {/http {\n        client_max_body_size $MAX_UPLOAD;/' \
-        -i /etc/nginx/nginx.conf && \
-    sed -e 's/upload_max_filesize = 2M/upload_max_filesize = $MAX_UPLOAD/' \
-        -e 's/post_max_size = 8M/post_max_size = $MAX_UPLOAD/' \
-        -i /etc/php5/fpm/php.ini
-
 # Install additional dependencies
 RUN apt-get update && apt-get install -y \
-    gettext-base \
-    mysql-client \
-    supervisor \
-    && rm -rf /var/lib/apt/lists/*
+      bzip2 \
+      libfreetype6-dev \
+      libjpeg62-turbo-dev \
+      libmcrypt-dev \
+      libpng12-dev \
+      mysql-client && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /usr/share/man/{??,??_*}
+
+# Install php extensions
+RUN docker-php-ext-install \
+      ctype \
+      mbstring \
+      mcrypt \
+      mysqli \
+      opcache \
+      zip && \
+    docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ && \
+    docker-php-ext-install gd
 
 # Install phpMyAdmin
-ENV PHPMYADMIN_VERSION=4.4.15
-RUN wget https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VERSION}/phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 \
-    && tar -xvjf /phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 -C / \
-    && rm /phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2 \
-    && rm -r /www \
-    && mv /phpMyAdmin-${PHPMYADMIN_VERSION}-english /www
+ENV PHPMYADMIN_VERSION=4.5.0.1
+RUN curl -sSL "https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VERSION}/phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2" | \
+    tar -xjC /var/www/html --strip 1
 
-# Copy supervisor conf
-COPY sources/supervisord.conf /etc/supervisor/conf.d/
-
-# Copy custom templates
-COPY sources/templates /templates
+# Custom templates
+ENV TEMPLATES="/var/www/html/sql/create_user.sql:/var/www/html/config.inc.php"
+COPY sources/templates /var/www/html/
 
 # Copy setup and start scripts
 COPY sources/bin /usr/local/bin/
-RUN chmod +x /usr/local/bin/*
 
-EXPOSE 80
-
-CMD ["/usr/local/bin/phpmyadmin-start"]
+CMD ["phpmyadmin-start"]
