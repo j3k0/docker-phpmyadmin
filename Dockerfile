@@ -32,7 +32,7 @@ RUN docker-php-ext-install \
     docker-php-ext-install gd
 
 # Install phpMyAdmin
-ENV PHPMYADMIN_VERSION=4.5.0.2
+ENV PHPMYADMIN_VERSION=4.6.1
 RUN curl -sSL "https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VERSION}/phpMyAdmin-${PHPMYADMIN_VERSION}-english.tar.bz2" | \
     tar -xjC /var/www/html --strip 1
 
